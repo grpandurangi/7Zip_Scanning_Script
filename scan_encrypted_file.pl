@@ -1,6 +1,5 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 #Script to scan the 7z XML documents
-#
 #Author : gururaj.r.pandurangi@pwc.com
 
 use File::Find;
@@ -12,11 +11,36 @@ $XML_PATH = "/sftp/guestuser/incoming";
 $SCAN_PATH = "/sftp/guestuser/decrypt";
 $FINAL_PATH = "/sftp/guestuser/mulesoft"; 
 $password = "myPass";
-$scanexitcode = "1";
+$scanexitcode = "0";
+$command = "";
 
+$command = qx(which 7za 2>>/dev/null) ;
+
+if ( "$?" != 0 )
+ {
+  die "Command for p7zip does not exist. Exiting \n";
+ }
+chomp($command);
+ 
 #opendir(DIR, $XML_PATH);
 #@files = grep(/\.7z$/,readdir(DIR));
 #closedir(DIR);
+
+if ( !-d $XML_PATH )
+ {
+  die "$XML_PATH does not exist\n";
+ }
+
+if ( !-d $SCAN_PATH )
+ {
+  die "$SCAN_PATH does not exist\n";
+ }
+
+if ( !-d $FINAL_PATH )
+ {
+  die "$FINAL_PATH does not exist\n";
+ }
+
 
 my @files;
 find(
@@ -42,7 +66,7 @@ foreach $file (@files) {
   $origfilename = $filename;
   $origfilename =~ s/.7z$//;
   #system("/usr/bin/7za" , "x" , "-p$password" , "$SCAN_PATH/$filename" , "-y" , "-o$SCAN_PATH" );
-  system("/usr/bin/7za x -p$password $SCAN_PATH/$filename -o$SCAN_PATH >>output.log " );
+  system("$command x -p$password $SCAN_PATH/$filename -o$SCAN_PATH >>output.log " );
   
   if ( -e "$SCAN_PATH/$origfilename" ) {
    print "Extracted orginal file \"$origfilename\" from \"$filename\" successfully \n";
