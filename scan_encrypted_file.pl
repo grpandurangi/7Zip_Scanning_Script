@@ -56,11 +56,14 @@ if (!@files) {
  exit 0;
 }
 
+# First move all the files to decrypt folder
+foreach $file (@files) {
+  move($file, $SCAN_PATH) or die "Move $file -> $SCAN_PATH failed: $!";
+}
 
 # Extract the 7zip file
 # # Scan the file and move the sucess file to final folder
 foreach $file (@files) {
-  move($file, $SCAN_PATH) or die "Move $file -> $SCAN_PATH failed: $!";
   $filename = basename($file);
   print "Encrypted file \"$filename\" is moved to $SCAN_PATH \n";
   $origfilename = $filename;
