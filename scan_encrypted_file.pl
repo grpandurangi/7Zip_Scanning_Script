@@ -53,7 +53,10 @@ if ( !-d $SCAN_FILE_FOLDER )
  {
   die "$SCAN_FILE_FOLDER does not exist\n";
  }
-
+else 
+ { 
+  qx(rm -rf $SCAN_FILE_FOLDER/*);
+}
 if ( !-d $FINAL_PATH )
  {
   die "$FINAL_PATH does not exist\n";
@@ -123,8 +126,10 @@ foreach $file (@files) {
   $origfilename =~ s/.7z$//;
   #system("/usr/bin/7za" , "x" , "-p$password" , "$SCAN_PATH/$filename" , "-y" , "-o$SCAN_PATH" );
   system("$command x -p$password $SCAN_PATH/$filename -y -o$SCAN_FILE_FOLDER >>$log_folder/decrypt_output.log " );
-  
-  if ( -e "$SCAN_FILE_FOLDER/$origfilename" ) {
+ 
+  # Just to check if the file exists 
+  qx( ls -1 "$SCAN_FILE_FOLDER/$origfilename" >/dev/null 2>/dev/null );
+  if ( "$?" == 0 ) {
    print "Extracted orginal file \"$origfilename\" from \"$filename\" successfully \n";
    }
   else  {
