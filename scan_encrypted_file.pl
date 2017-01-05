@@ -5,18 +5,23 @@
 use File::Find;
 use File::Copy;
 use File::Basename;
+use MIME::Lite;
 use Cwd;
 
 $XML_PATH = "/sftp/guestuser/incoming";
 $SCAN_PATH = "/sftp/guestuser/decrypt";
 $SCAN_FILE_FOLDER = "/sftp/guestuser/decrypt/scan";
 $FINAL_PATH = "/sftp/guestuser/mulesoft"; 
+$ISSUE_PATH = "/sftp/guestuser/issue"; 
 $password = "myPass";
 $command = "";
 $mcafee_scan_cmd  = "/opt/isec/ens/threatprevention/bin/isecav";
 $mcafee_task_name = "scan_xml_file";
 $status = "";
 $command = qx(which 7za 2>>/dev/null) ;
+$email_notification_list = "grpandurangi\@gmail.com";
+$from_email = "scanreport\@myapplication.com";
+$log_folder = "/var/log";
 
 if ( "$?" != 0 )
  {
@@ -58,15 +63,19 @@ if ( !-d $FINAL_PATH )
 sub mcafee_scan_a_file{
  
  my $status = "";
- system("$mcafee_scan_cmd --runtask --name $mcafee_task_name >>mcafee_output.log " );
+ system("$mcafee_scan_cmd --runtask --name $mcafee_task_name >>$log_folder/mcafee_scan_output.log " );
  $status = qx($mcafee_scan_cmd --listtasks |grep $mcafee_task_name | awk '{print \$4}');
 
- while ($status ne "Completed" ) {
+ while (1) {
    system ("sleep 3");
    $status = qx($mcafee_scan_cmd --listtasks |grep $mcafee_task_name | awk '{print \$4}');
-   chomp($status);
+   chomp($status);   
+  if ( $status eq "Completed" || $status eq "Stopped" || $status eq "Aborted" )  {
+   last ; 
+   }
  }
- 
+
+ chomp($status); 
  return $status ;
 
 }
@@ -113,13 +122,28 @@ foreach $file (@files) {
   $origfilename = $filename;
   $origfilename =~ s/.7z$//;
   #system("/usr/bin/7za" , "x" , "-p$password" , "$SCAN_PATH/$filename" , "-y" , "-o$SCAN_PATH" );
-  system("$command x -p$password $SCAN_PATH/$filename -y -o$SCAN_FILE_FOLDER >>output.log " );
+  system("$command x -p$password $SCAN_PATH/$filename -y -o$SCAN_FILE_FOLDER >>$log_folder/decrypt_output.log " );
   
   if ( -e "$SCAN_FILE_FOLDER/$origfilename" ) {
    print "Extracted orginal file \"$origfilename\" from \"$filename\" successfully \n";
    }
   else  {
-   print "File \"$filename\" was not extracted. Moving this file to issue folder \n"; 
+   print "File \"$filename\" was not extracted. Moving file to issue folder. Email notification sent. \n"; 
+   move("$SCAN_PATH/$filename", $ISSUE_PATH) or die "Move $filename -> $ISSUE_PATH failed: $!";
+   print "-----------------------Issue $filename---------------------------\n";
+   
+   my $subject = "Issue with $filename : Unable to extract"; 
+   my $message = "Decrypted file $filename is infected. Unable to extract";
+   $msg = MIME::Lite->new(
+                 From     => $from_email,
+                 To       => $email_notification_list,
+                 Subject  => $subject,
+                 Data     => $message
+                 );
+                 
+    $msg->attr("content-type" => "text/html");         
+    $msg->send; 
+    next; 
    }
 
  #########################McAfee Command to scan the Orginal file####################
@@ -131,6 +155,18 @@ foreach $file (@files) {
  
   if ( $status ne "Completed" ) {
        print "File \"$filename\" did NOT pass McAfee SCAN. Status: $status . Email notifcation sent.File is deleted.\n";
+         my $subject = "McAfee scan for $filename with status: $status";
+         my $message = "McAfee scan for $filename failed with status $status. File is deleted. Kindly review";
+         $msg = MIME::Lite->new(
+                 From     => $from_email,
+                 To       => $email_notification_list,
+                 Subject  => $subject,
+                 Data     => $message
+                 );
+
+          $msg->attr("content-type" => "text/html");
+          $msg->send;
+
        unlink "$SCAN_PATH/$filename";
     }
      else 
@@ -139,5 +175,5 @@ foreach $file (@files) {
       move ("$SCAN_PATH/$filename" , $FINAL_PATH ) or die "Move $filename -> $FINAL_PATH failed: $!";
     }
  unlink "$SCAN_FILE_FOLDER/$origfilename";
-    print "-----------------------Completed $filename---------------------------\n";
+    print "-----------------------$status $filename---------------------------\n";
 }
