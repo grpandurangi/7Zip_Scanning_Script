@@ -10,7 +10,7 @@ use Cwd;
 
 $XML_PATH = "/sftp/guestuser/incoming";
 $SCAN_PATH = "/sftp/guestuser/decrypt";
-$SCAN_FILE_FOLDER = "/sftp/guestuser/decrypt/scan";
+#$SCAN_FILE_FOLDER = "/sftp/guestuser/decrypt/scan";
 $FINAL_PATH = "/sftp/guestuser/mulesoft"; 
 $password = "myPass";
 $command = "";
@@ -40,14 +40,6 @@ if ( !-d $SCAN_PATH )
   die "$SCAN_PATH does not exist\n";
  }
 
-if ( !-d $SCAN_FILE_FOLDER )
- {
-  die "$SCAN_FILE_FOLDER does not exist\n";
- }
-else 
- { 
-  qx(rm -rf $SCAN_FILE_FOLDER/*);
-}
 if ( !-d $FINAL_PATH )
  {
   die "$FINAL_PATH does not exist\n";
@@ -81,7 +73,15 @@ foreach $file (@files) {
   $filename = basename($file);
   $origfilename = $filename;
   $origfilename =~ s/.7z$//;
+ 
+  my $folder = $origfilename;
+ 
+  $SCAN_FILE_FOLDER = "$SCAN_PATH/$folder";
   
+   unless(-e $SCAN_FILE_FOLDER or mkdir $SCAN_FILE_FOLDER) {
+        die "Unable to create $SCAN_FILE_FOLDER\n";
+    }  
+ 
   system("$command x -p$password $SCAN_PATH/$filename -y -o$SCAN_FILE_FOLDER >>$log_folder/decrypt_output.log " );
   system ("sleep 2"); 
 
@@ -91,9 +91,21 @@ foreach $file (@files) {
    print "Extracted orginal file \"$origfilename\" from \"$filename\" successfully \n";
    }
   else  {
-   print "Originnal file for \"$filename\" does not exist. \n"; 
+   print "Original file for \"$filename\" does not exist. \n"; 
+
+    my $mfl_rpm_installed = "";
+    $mfl_rpm_installed = qx ( rpm -qa McAfeeVSEForLinux );
+
+     if ( $mfl_rpm_installed ne "" ) {
+              print "Print $mfl_rpm_installed \n";  
+              system("grep $folder /var/log/messages");
+              qx( grep $folder /var/log/messages );
+      }
     next; 
    }
+
+  system("rm -rf $SCAN_FILE_FOLDER");
+
 
   if ( $status ne "Completed" ) {
        print "File \"$filename\" did NOT pass McAfee SCAN. Status: $status . Email notifcation sent.File is deleted.\n";
