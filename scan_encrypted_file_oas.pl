@@ -77,13 +77,9 @@ foreach $file (@files) {
 
   my $date = qx (date +%Y%m%d%H%M%S); 
   chomp($date);
-  my $folder = "$origfilename.$date";
+  my $folder = "$filename#_#$date";
 
-  print "$date\n"; 
   $SCAN_FILE_FOLDER = "$SCAN_PATH/$folder";
-  
-  print "$SCAN_FILE_FOLDER\n" ; 
-
   unless(-e $SCAN_FILE_FOLDER or mkdir $SCAN_FILE_FOLDER) {
         die "Unable to create $SCAN_FILE_FOLDER\n";
     }  
@@ -109,8 +105,8 @@ foreach $file (@files) {
     $mfl_rpm_installed = qx ( rpm -qa McAfeeVSEForLinux );
 
      if ( $mfl_rpm_installed ne "" ) {
-              print "Print $folder $mfl_rpm_installed \n";  
-              $output  = qx( grep $folder /var/log/messages );
+              print "Print $mfl_rpm_installed \n";  
+              $output  = qx( grep $folder /var/log/messages | awk -F "#_#" '{print \$1}' | awk -F "/" '{print \$NF}' );
               print $output;
         }
  # If ISec is installed
@@ -118,8 +114,8 @@ foreach $file (@files) {
       $isec_rpm_installed  = qx (rpm -qa ISecESP);
 
    if ( $isec_rpm_installed ne "" ) {
-              print "Print $folder $isec_rpm_installed \n";
-              $output  = qx( grep $folder $oas_log );
+              print "Print $isec_rpm_installed \n";
+              $output  = qx( grep $folder $oas_log | awk -F "#_#" '{print \$1}' |awk -F "/" '{print \$NF}');
               print $output;
         }
  next;
