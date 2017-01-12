@@ -19,6 +19,7 @@ $command = qx(which 7za 2>>/dev/null) ;
 $email_notification_list = "grpandurangi\@gmail.com";
 $from_email = "scanreport\@myapplication.com";
 $log_folder = "/var/log";
+$oas_log = "/opt/isec/ens/threatprevention/var/isecoasmgr.log" ;
 
 if ( "$?" != 0 )
  {
@@ -73,12 +74,17 @@ foreach $file (@files) {
   $filename = basename($file);
   $origfilename = $filename;
   $origfilename =~ s/.7z$//;
- 
-  my $folder = $origfilename;
- 
+
+  my $date = qx (date +%Y%m%d%H%M%S); 
+  chomp($date);
+  my $folder = "$origfilename.$date";
+
+  print "$date\n"; 
   $SCAN_FILE_FOLDER = "$SCAN_PATH/$folder";
   
-   unless(-e $SCAN_FILE_FOLDER or mkdir $SCAN_FILE_FOLDER) {
+  print "$SCAN_FILE_FOLDER\n" ; 
+
+  unless(-e $SCAN_FILE_FOLDER or mkdir $SCAN_FILE_FOLDER) {
         die "Unable to create $SCAN_FILE_FOLDER\n";
     }  
  
@@ -89,23 +95,36 @@ foreach $file (@files) {
   qx( ls -1 "$SCAN_FILE_FOLDER/$origfilename" >/dev/null 2>/dev/null );
   if ( "$?" == 0 ) {
    print "Extracted orginal file \"$origfilename\" from \"$filename\" successfully \n";
+   $status = "Completed";
    }
   else  {
    print "Original file for \"$filename\" does not exist. \n"; 
+   $status = "Deleted";
 
+
+  system("rm -rf $SCAN_FILE_FOLDER");
+
+  # If McAfeeVSEForLinux is installed
     my $mfl_rpm_installed = "";
     $mfl_rpm_installed = qx ( rpm -qa McAfeeVSEForLinux );
 
      if ( $mfl_rpm_installed ne "" ) {
-              print "Print $mfl_rpm_installed \n";  
-              system("grep $folder /var/log/messages");
-              qx( grep $folder /var/log/messages );
-      }
-    next; 
-   }
+              print "Print $folder $mfl_rpm_installed \n";  
+              $output  = qx( grep $folder /var/log/messages );
+              print $output;
+        }
+ # If ISec is installed
+     my $isec_rpm_installed  = "";
+      $isec_rpm_installed  = qx (rpm -qa ISecESP);
 
-  system("rm -rf $SCAN_FILE_FOLDER");
+   if ( $isec_rpm_installed ne "" ) {
+              print "Print $folder $isec_rpm_installed \n";
+              $output  = qx( grep $folder $oas_log );
+              print $output;
+        }
+ next;
 
+ }
 
   if ( $status ne "Completed" ) {
        print "File \"$filename\" did NOT pass McAfee SCAN. Status: $status . Email notifcation sent.File is deleted.\n";
