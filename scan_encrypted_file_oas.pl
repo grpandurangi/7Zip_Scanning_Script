@@ -95,8 +95,7 @@ foreach $file (@files) {
    }
   else  {
    print "Original file for \"$filename\" does not exist. \n"; 
-   $status = "Deleted";
-
+   $status = "Infected";
 
   system("rm -rf $SCAN_FILE_FOLDER");
 
@@ -108,7 +107,7 @@ foreach $file (@files) {
               print "Print $mfl_rpm_installed \n";  
               #$output  = qx( grep $folder /var/log/messages | awk -F "#_#" '{print \$1}' | head -1 | awk -F "/" '{print \$NF}' );
               @output  = qx( grep $folder /var/log/messages);
-              print $output[1];
+              $message = $output[0];
         }
  # If ISec is installed
      my $isec_rpm_installed  = "";
@@ -118,16 +117,14 @@ foreach $file (@files) {
               print "Print $isec_rpm_installed \n";
               #@output  = qx( grep $folder $oas_log | awk -F "#_#" '{print \$1}' |awk -F "/" '{print \$NF}');
               @output  = qx( grep $folder $oas_log );
-              print $output[1];
+              $message = $output[0];
         }
- next;
 
  }
 
   if ( $status ne "Completed" ) {
        print "File \"$filename\" did NOT pass McAfee SCAN. Status: $status . Email notifcation sent.File is deleted.\n";
          my $subject = "McAfee scan for $filename with status: $status";
-         my $message = "McAfee scan for $filename failed with status $status. File is deleted. Kindly review";
          $msg = MIME::Lite->new(
                  From     => $from_email,
                  To       => $email_notification_list,
