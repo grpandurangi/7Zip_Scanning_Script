@@ -102,7 +102,7 @@ foreach $file (@files) {
   # If McAfeeVSEForLinux is installed
     my $mfl_rpm_installed = "";
     $mfl_rpm_installed = qx ( rpm -qa McAfeeVSEForLinux );
-
+    chomp($mfl_rpm_installed);
      if ( $mfl_rpm_installed ne "" ) {
               print "Print $mfl_rpm_installed \n";  
               #$output  = qx( grep $folder /var/log/messages | awk -F "#_#" '{print \$1}' | head -1 | awk -F "/" '{print \$NF}' );
@@ -112,9 +112,9 @@ foreach $file (@files) {
  # If ISec is installed
      my $isec_rpm_installed  = "";
       $isec_rpm_installed  = qx (rpm -qa ISecESP);
-
+      chop($isec_rpm_installed);
    if ( $isec_rpm_installed ne "" ) {
-              print "Print $isec_rpm_installed \n";
+              print "Print $isec_rpm_installed";
               #@output  = qx( grep $folder $oas_log | awk -F "#_#" '{print \$1}' |awk -F "/" '{print \$NF}');
               @output  = qx( grep $folder $oas_log );
               $message = $output[0];
