@@ -106,8 +106,9 @@ foreach $file (@files) {
 
      if ( $mfl_rpm_installed ne "" ) {
               print "Print $mfl_rpm_installed \n";  
-              $output  = qx( grep $folder /var/log/messages | awk -F "#_#" '{print \$1}' | awk -F "/" '{print \$NF}' );
-              print $output;
+              #$output  = qx( grep $folder /var/log/messages | awk -F "#_#" '{print \$1}' | head -1 | awk -F "/" '{print \$NF}' );
+              @output  = qx( grep $folder /var/log/messages);
+              print $output[1];
         }
  # If ISec is installed
      my $isec_rpm_installed  = "";
@@ -115,8 +116,9 @@ foreach $file (@files) {
 
    if ( $isec_rpm_installed ne "" ) {
               print "Print $isec_rpm_installed \n";
-              $output  = qx( grep $folder $oas_log | awk -F "#_#" '{print \$1}' |awk -F "/" '{print \$NF}');
-              print $output;
+              #@output  = qx( grep $folder $oas_log | awk -F "#_#" '{print \$1}' |awk -F "/" '{print \$NF}');
+              @output  = qx( grep $folder $oas_log );
+              print $output[1];
         }
  next;
 
