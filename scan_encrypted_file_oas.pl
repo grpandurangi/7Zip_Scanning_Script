@@ -112,9 +112,9 @@ foreach $file (@files) {
  # If ISec is installed
      my $isec_rpm_installed  = "";
       $isec_rpm_installed  = qx (rpm -qa ISecESP);
-      chop($isec_rpm_installed);
+      chomp($isec_rpm_installed);
    if ( $isec_rpm_installed ne "" ) {
-              print "Print $isec_rpm_installed";
+              print "Print $isec_rpm_installed \n";
               #@output  = qx( grep $folder $oas_log | awk -F "#_#" '{print \$1}' |awk -F "/" '{print \$NF}');
               @output  = qx( grep $folder $oas_log );
               $message = $output[0];
