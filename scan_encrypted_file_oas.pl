@@ -89,8 +89,8 @@ foreach $file (@files) {
   # Check if the file exists 
   $my_list = qx( ls -1 "$SCAN_FILE_FOLDER" | wc -l );
   if ( "$my_list" > 0 ) {
-   print "Extracted orginal file from \"$filename\" successfully \n";
-    print "@original_files";
+   print "Extracted below orginal file(s) for \"$filename\" successfully:\n";
+   print "@original_files";
    $status = "Completed";
    }
   else  {
