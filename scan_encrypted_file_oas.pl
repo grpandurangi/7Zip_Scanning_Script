@@ -94,10 +94,10 @@ foreach $file (@files) {
    $status = "Completed";
    }
   else  {
-   print "Original file for \"$filename\" does not exist. \n"; 
+   print "Original file(s) for \"$filename\" does not exist after decrypt. \n"; 
    $status = "Infected";
 
-  #system("rm -rf $SCAN_FILE_FOLDER");
+  system("rm -rf $SCAN_FILE_FOLDER");
 
   # If McAfeeVSEForLinux is installed
     my $mfl_rpm_installed = "";
